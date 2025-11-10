@@ -1,3 +1,0 @@
-name = "my-mastra-app"
-main = ".mastra/output/wrangler.json"
-compatibility_date = "2025-11-10"
