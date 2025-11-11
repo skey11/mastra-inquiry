@@ -1,18 +1,34 @@
 
 import { Mastra } from '@mastra/core/mastra';
 import { PinoLogger } from '@mastra/loggers';
-import { LibSQLStore } from '@mastra/libsql';
 import { tcmConsultationWorkflow } from './workflows/tcm-consultation-workflow';
 import { tcmConsultationAgent } from './agents/tcm-agent';
 import { toolCallAppropriatenessScorer, completenessScorer, safetyReminderScorer } from './scorers/tcm-scorer';
 import { CloudflareDeployer } from "@mastra/deployer-cloudflare";
+import { createLibSQLStore } from './libsql-store';
+
+const getCloudflareEnv = () => {
+  if (typeof process === 'undefined' || !process.env) {
+    return { NODE_ENV: "production" };
+  }
+
+  const envVars: Record<string, string> = { NODE_ENV: "production" };
+  if (process.env.LIBSQL_URL) {
+    envVars.LIBSQL_URL = process.env.LIBSQL_URL;
+  }
+  if (process.env.LIBSQL_AUTH_TOKEN) {
+    envVars.LIBSQL_AUTH_TOKEN = process.env.LIBSQL_AUTH_TOKEN;
+  }
+  return envVars;
+};
+
 export const mastra = new Mastra({
   workflows: { tcmConsultationWorkflow },
   agents: { tcmConsultationAgent },
   scorers: { toolCallAppropriatenessScorer, completenessScorer, safetyReminderScorer },
-  storage: new LibSQLStore({
-    // stores observability, scores, ... into memory storage, if it needs to persist, change to file:../mastra.db
-    url: ":memory:",
+  storage: createLibSQLStore({
+    // stores observability, scores, ... into memory storage, if it needs to persist, change LIBSQL_URL to a remote libsql endpoint
+    fallbackUrl: ":memory:",
   }),
   logger: new PinoLogger({
     name: 'Mastra',
@@ -28,8 +44,6 @@ export const mastra = new Mastra({
   },
   deployer: new CloudflareDeployer({
     projectName: "mastraagent",
-    env: {
-      NODE_ENV: "production",
-    },
+    env: getCloudflareEnv(),
   }),
 });

@@ -1,8 +1,8 @@
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
-import { LibSQLStore } from '@mastra/libsql';
 import { tcmConsultationTool } from '../tools/tcm-consultation-tool';
 import { scorers } from '../scorers/tcm-scorer';
+import { createLibSQLStore } from '../libsql-store';
 
 export const tcmConsultationAgent = new Agent({
   name: '中医临床顾问 (TCM Consultation Specialist)',
@@ -43,8 +43,8 @@ export const tcmConsultationAgent = new Agent({
     },
   },
   memory: new Memory({
-    storage: new LibSQLStore({
-      url: 'file:../mastra.db', // path is relative to the .mastra/output directory
+    storage: createLibSQLStore({
+      fallbackUrl: 'file:../mastra.db', // path is relative to the .mastra/output directory
     }),
   }),
 });
