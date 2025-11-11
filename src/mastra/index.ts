@@ -27,7 +27,7 @@ export const mastra = new Mastra({
     default: { enabled: true }, 
   },
   deployer: new CloudflareDeployer({
-    projectName: "hello-mastra",
+    projectName: "mastraagent",
     env: {
       NODE_ENV: "production",
     },
