@@ -8,7 +8,8 @@
     "dev": "mastra dev",
     "build": "mastra build",
     "start": "mastra start",
-    "deploy": "npm run build && wrangler deploy --config .mastra/output/wrangler.json"
+    "deploy": "npm run build && wrangler deploy --config .mastra/output/wrangler.json",
+    "postinstall": "patch-package"
   },
   "keywords": [],
   "author": "",
@@ -30,6 +31,7 @@
     "@types/node": "^24.10.0",
     "esbuild": "^0.27.0",
     "mastra": "^0.18.0",
+    "patch-package": "^8.0.1",
     "typescript": "^5.9.3",
     "wrangler": "^4.46.0"
   }
