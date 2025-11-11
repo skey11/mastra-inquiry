@@ -22,6 +22,22 @@ const getCloudflareEnv = () => {
   return envVars;
 };
 
+const frontendOriginFromEnv = typeof process !== 'undefined' ? process.env?.FRONTEND_ORIGIN : undefined;
+
+const allowedOrigins = [
+  'https://449cdfa5.mastra-frontend.pages.dev',
+  'https://mastra.viplook.dpdns.org',
+  frontendOriginFromEnv,
+].filter((origin): origin is string => Boolean(origin));
+
+const corsConfig = {
+  origin: allowedOrigins.length ? allowedOrigins : '*',
+  allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization', 'x-mastra-client-type'],
+  exposeHeaders: ['Content-Length', 'X-Requested-With'],
+  credentials: true,
+};
+
 export const mastra = new Mastra({
   workflows: { tcmConsultationWorkflow },
   agents: { tcmConsultationAgent },
@@ -46,4 +62,7 @@ export const mastra = new Mastra({
     projectName: "mastraagent",
     env: getCloudflareEnv(),
   }),
+  server: {
+    cors: corsConfig,
+  },
 });
