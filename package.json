@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.10.0",
+    "esbuild": "^0.27.0",
     "mastra": "^0.18.0",
     "typescript": "^5.9.3",
     "wrangler": "^4.46.0"
