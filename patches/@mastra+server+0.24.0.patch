@@ -1,0 +1,161 @@
+diff --git a/node_modules/@mastra/server/dist/chunk-OQPXME7E.js b/node_modules/@mastra/server/dist/chunk-OQPXME7E.js
+index e831999..6fffc88 100644
+--- a/node_modules/@mastra/server/dist/chunk-OQPXME7E.js
++++ b/node_modules/@mastra/server/dist/chunk-OQPXME7E.js
+@@ -15523,103 +15523,34 @@ export const mastra = new Mastra({
+    */
+   static async validateSyntaxOnly(fileContent, fileName) {
+     const errors = [];
+-    try {
+-      const ts = await import('typescript');
+-      const sourceFile = ts.createSourceFile(fileName, fileContent, ts.ScriptTarget.Latest, true);
+-      const options = {
+-        allowJs: true,
+-        checkJs: false,
+-        noEmit: true
+-      };
+-      const host = {
+-        getSourceFile: (name21) => name21 === fileName ? sourceFile : void 0,
+-        writeFile: () => {
+-        },
+-        getCurrentDirectory: () => "",
+-        getDirectories: () => [],
+-        fileExists: (name21) => name21 === fileName,
+-        readFile: (name21) => name21 === fileName ? fileContent : void 0,
+-        getCanonicalFileName: (name21) => name21,
+-        useCaseSensitiveFileNames: () => true,
+-        getNewLine: () => "\n",
+-        getDefaultLibFileName: () => "lib.d.ts"
+-      };
+-      const program = ts.createProgram([fileName], options, host);
+-      const diagnostics = program.getSyntacticDiagnostics(sourceFile);
+-      for (const diagnostic of diagnostics) {
+-        if (diagnostic.start !== void 0) {
+-          const position = sourceFile.getLineAndCharacterOfPosition(diagnostic.start);
++    const lines = fileContent.split("\n");
++    const commonErrors = [
++      { pattern: /\bimport\s+.*\s+from\s+['""][^'"]*$/, message: "Unterminated import statement" },
++      { pattern: /\{[^}]*$/, message: "Unclosed brace" },
++      { pattern: /\([^)]*$/, message: "Unclosed parenthesis" },
++      { pattern: /\[[^\]]*$/, message: "Unclosed bracket" }
++    ];
++    lines.forEach((line, index) => {
++      commonErrors.forEach(({ pattern, message }) => {
++        if (pattern.test(line)) {
+           errors.push({
+             type: "typescript",
+             severity: "error",
+-            message: ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"),
++            message,
+             file: fileName,
+-            line: position.line + 1,
+-            column: position.character + 1
++            line: index + 1
+           });
+         }
+-      }
+-    } catch (error) {
+-      console.warn("TypeScript not available for syntax validation:", error);
+-      const lines = fileContent.split("\n");
+-      const commonErrors = [
+-        { pattern: /\bimport\s+.*\s+from\s+['""][^'"]*$/, message: "Unterminated import statement" },
+-        { pattern: /\{[^}]*$/, message: "Unclosed brace" },
+-        { pattern: /\([^)]*$/, message: "Unclosed parenthesis" },
+-        { pattern: /\[[^\]]*$/, message: "Unclosed bracket" }
+-      ];
+-      lines.forEach((line, index) => {
+-        commonErrors.forEach(({ pattern, message }) => {
+-          if (pattern.test(line)) {
+-            errors.push({
+-              type: "typescript",
+-              severity: "error",
+-              message,
+-              file: fileName,
+-              line: index + 1
+-            });
+-          }
+-        });
+       });
+-    }
++    });
+     return errors;
+   }
+   /**
+    * TypeScript semantic validation using incremental program
+    */
+-  static async validateTypesSemantic(filePath, projectPath) {
+-    const errors = [];
+-    try {
+-      const program = await this.getOrCreateTSProgram(projectPath);
+-      if (!program) {
+-        return errors;
+-      }
+-      const sourceFile = program.getSourceFile(filePath);
+-      if (!sourceFile) {
+-        return errors;
+-      }
+-      const diagnostics = [
+-        ...program.getSemanticDiagnostics(sourceFile),
+-        ...program.getSyntacticDiagnostics(sourceFile)
+-      ];
+-      const ts = await import('typescript');
+-      for (const diagnostic of diagnostics) {
+-        if (diagnostic.start !== void 0) {
+-          const position = sourceFile.getLineAndCharacterOfPosition(diagnostic.start);
+-          errors.push({
+-            type: "typescript",
+-            severity: diagnostic.category === ts.DiagnosticCategory.Warning ? "warning" : "error",
+-            message: ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"),
+-            file: filePath,
+-            line: position.line + 1,
+-            column: position.character + 1
+-          });
+-        }
+-      }
+-    } catch (error) {
+-      console.warn(`TypeScript semantic validation failed for ${filePath}:`, error);
+-    }
+-    return errors;
++  static async validateTypesSemantic() {
++    console.warn("TypeScript semantic validation is disabled in this deployment environment.");
++    return [];
+   }
+   /**
+    * ESLint validation for a single file
+@@ -15649,34 +15580,8 @@ export const mastra = new Mastra({
+   /**
+    * Get or create TypeScript program
+    */
+-  static async getOrCreateTSProgram(projectPath) {
+-    if (this.tsProgram && this.programProjectPath === projectPath) {
+-      return this.tsProgram;
+-    }
+-    try {
+-      const ts = await import('typescript');
+-      const configPath = ts.findConfigFile(projectPath, ts.sys.fileExists, "tsconfig.json");
+-      if (!configPath) {
+-        return null;
+-      }
+-      const configFile = ts.readConfigFile(configPath, ts.sys.readFile);
+-      if (configFile.error) {
+-        return null;
+-      }
+-      const parsedConfig = ts.parseJsonConfigFileContent(configFile.config, ts.sys, projectPath);
+-      if (parsedConfig.errors.length > 0) {
+-        return null;
+-      }
+-      this.tsProgram = ts.createProgram({
+-        rootNames: parsedConfig.fileNames,
+-        options: parsedConfig.options
+-      });
+-      this.programProjectPath = projectPath;
+-      return this.tsProgram;
+-    } catch (error) {
+-      console.warn("Failed to create TypeScript program:", error);
+-      return null;
+-    }
++  static async getOrCreateTSProgram() {
++    return null;
+   }
+   // Note: Old filterTypeScriptErrors method removed in favor of hybrid validation approach
+   /**
