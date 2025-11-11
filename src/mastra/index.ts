@@ -5,7 +5,7 @@ import { LibSQLStore } from '@mastra/libsql';
 import { tcmConsultationWorkflow } from './workflows/tcm-consultation-workflow';
 import { tcmConsultationAgent } from './agents/tcm-agent';
 import { toolCallAppropriatenessScorer, completenessScorer, safetyReminderScorer } from './scorers/tcm-scorer';
-
+import { CloudflareDeployer } from "@mastra/deployer-cloudflare";
 export const mastra = new Mastra({
   workflows: { tcmConsultationWorkflow },
   agents: { tcmConsultationAgent },
@@ -26,4 +26,10 @@ export const mastra = new Mastra({
     // Enables DefaultExporter and CloudExporter for AI tracing
     default: { enabled: true }, 
   },
+  deployer: new CloudflareDeployer({
+    projectName: "hello-mastra",
+    env: {
+      NODE_ENV: "production",
+    },
+  }),
 });
