@@ -1,0 +1,4 @@
+name = "ai-chat-graphql-worker"
+main = ".mastra/output/index.mjs"
+compatibility_date = "22025-04-01"
+workers_dev = true
