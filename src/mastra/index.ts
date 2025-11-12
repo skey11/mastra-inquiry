@@ -43,14 +43,7 @@ export const mastra = new Mastra({
     default: { enabled: true }, 
   },
   deployer: new CloudflareDeployer({
-    projectName: "mastraagent",
+    projectName: "mastra-frontend",
     env: getCloudflareEnv(),
-    routes: [
-      {
-        pattern: "mastra.viplook.dpdns.org/*",
-        zone_name: "mastra.viplook.dpdns.org",
-        custom_domain: false
-      }
-    ],
   }),
 });
