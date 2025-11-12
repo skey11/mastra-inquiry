@@ -67,17 +67,16 @@ const createCorsMiddleware = () => ({
       return new Response(null, { status: 204, headers });
     }
 
-    try {
-      await next();
-    } finally {
-      if (allowedOrigin) {
-        c.header('Access-Control-Allow-Origin', allowedOrigin, { overwrite: true });
-        c.header('Vary', 'Origin', { append: true });
-      }
-      Object.entries(baseCorsHeaders).forEach(([key, value]) => {
-        c.header(key, value, { overwrite: true });
-      });
+    Object.entries(baseCorsHeaders).forEach(([key, value]) => {
+      c.header(key, value, { overwrite: true });
+    });
+
+    if (allowedOrigin) {
+      c.header('Access-Control-Allow-Origin', allowedOrigin, { overwrite: true });
+      c.header('Vary', 'Origin', { append: true });
     }
+
+    await next();
   },
 });
 
