@@ -43,7 +43,7 @@ export const mastra = new Mastra({
     default: { enabled: true }, 
   },
   deployer: new CloudflareDeployer({
-    projectName: "mastra-frontend",
+    projectName: "mastraagent",
     env: getCloudflareEnv(),
   }),
 });
