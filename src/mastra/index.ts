@@ -23,12 +23,63 @@ const getCloudflareEnv = () => {
 };
 
 const frontendOriginFromEnv = typeof process !== 'undefined' ? process.env?.FRONTEND_ORIGIN : undefined;
+const corsEnvOrigins = typeof process !== 'undefined' && process.env?.CORS_ALLOWED_ORIGINS
+  ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(origin => origin.trim()).filter(Boolean)
+  : [];
 
 const allowedOrigins = [
   'https://449cdfa5.mastra-frontend.pages.dev',
   'https://mastra.viplook.dpdns.org',
   frontendOriginFromEnv,
+  ...corsEnvOrigins,
 ].filter((origin): origin is string => Boolean(origin));
+
+const baseCorsHeaders: Record<string, string> = {
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-mastra-client-type',
+  'Access-Control-Allow-Credentials': 'true',
+  'Access-Control-Expose-Headers': 'Content-Length, X-Requested-With',
+};
+
+const resolveAllowedOrigin = (origin: string | null | undefined) => {
+  if (!origin || !allowedOrigins.length) return null;
+  if (allowedOrigins.includes('*')) return origin;
+  return allowedOrigins.includes(origin) ? origin : null;
+};
+
+const createCorsMiddleware = () => ({
+  path: '*',
+  handler: async (c: any, next: () => Promise<void>) => {
+    const requestOrigin = c.req.header('Origin') ?? c.req.header('origin');
+    const allowedOrigin = resolveAllowedOrigin(requestOrigin);
+
+    if (c.req.method === 'OPTIONS') {
+      if (!allowedOrigin) {
+        return new Response(null, { status: 204 });
+      }
+      const headers = new Headers(baseCorsHeaders);
+      headers.set('Access-Control-Allow-Origin', allowedOrigin);
+      headers.append('Vary', 'Origin');
+      const requestHeaders = c.req.header('Access-Control-Request-Headers');
+      if (requestHeaders) {
+        headers.set('Access-Control-Allow-Headers', requestHeaders);
+      }
+      return new Response(null, { status: 204, headers });
+    }
+
+    try {
+      await next();
+    } finally {
+      if (allowedOrigin) {
+        c.header('Access-Control-Allow-Origin', allowedOrigin, { overwrite: true });
+        c.header('Vary', 'Origin', { append: true });
+      }
+      Object.entries(baseCorsHeaders).forEach(([key, value]) => {
+        c.header(key, value, { overwrite: true });
+      });
+    }
+  },
+});
 
 const corsConfig = {
   origin: allowedOrigins.length ? allowedOrigins : '*',
@@ -64,5 +115,6 @@ export const mastra = new Mastra({
   }),
   server: {
     cors: corsConfig,
+    middleware: [createCorsMiddleware()],
   },
 });
